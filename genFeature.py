@@ -29,7 +29,7 @@ def read_nc_by_features(ncfile, feats, ny=9, nx=13):
         for feat in feats:
             varfield = np.empty((ny,nx), np.float)
             varfield.fill(np.nan)
-        retlist.append(varfield)
+            retlist.append(varfield)
     return retlist
 
 
@@ -63,7 +63,7 @@ def read_multiple_ncs(nc_dir, start_initdate, end_initdata, int_initdate, fcsthr
     return retlist, dates, range(fcsthr1, fcsthr2+1, int_fcsthr)
 
 
-def ncdata_interp_fcstto1hr(ncdata, fcsthrs, output_hrs):
+def ncdata_interp_fcstto1hr(ncdata, init_dts, fcsthrs, output_hrs):
     fcsthrs=np.array(fcsthrs)
     output_hrs=np.array(output_hrs)
     n_inhour=len(fcsthrs)
@@ -96,10 +96,7 @@ def ncdata_interp_fcstto1hr(ncdata, fcsthrs, output_hrs):
             w2=weights[t,1]
             timedata=[]
             for k in range(nvar):
-                try:
-                    vardata = cycledata[t1][k] * w1 + cycledata[t2][k] * w2
-                except:
-                    print((t1,t2,k,w1,w2,len(cycledata), len(cycledata[t1]), len(cycledata[t2])))
+                vardata = cycledata[t1][k] * w1 + cycledata[t2][k] * w2
                 timedata.append(vardata)
             outputdata.append(timedata)
         ncdata[icyc] = outputdata
@@ -149,23 +146,26 @@ if __name__ == "__main__":
                ("Vwind_100m", "VGRD_P0_L103_GLL0", 2),
                ("Temp_50m", "TMP_P0_L104_GLL0", -1),
                ("RH_50m", "RH_P0_L104_GLL0", -1) ]
-    
-    nc_dir="../data/data2017/"
-    #start_initdate="2016010100"
-    #end_initdata=  "2016011000"
-    #end_initdata=  "2017010112"
-    start_initdate="2017012700"
-    end_initdata="2018013118"
-
+     
+    #2017
+    #nc_dir="../data/data2017/"
+    #start_initdate="2017012700"
+    #end_initdata="2018013118"
     int_initdate=6  # 6 hour interval
     fcsthr1=0
     fcsthr2=6
     int_fcsthr=3  # 3 hour interval
-    #ncfile_pattern="gfs.0p25.%s.f%0.3d.grib2.shen327593.nc"
-    ncfile_pattern="gfs.0p25.%s.f%0.3d.grib2.shen327093.nc"
+    #ncfile_pattern="gfs.0p25.%s.f%0.3d.grib2.shen327093.nc"
+    
+    #2016
+    nc_dir="../data/data2016"
+    start_initdate="2016010100"
+    end_initdata=  "2017010112"
+    ncfile_pattern="gfs.0p25.%s.f%0.3d.grib2.shen327593.nc"
+    
     (ncdata, init_dts, fcsthrs) = read_multiple_ncs(nc_dir, start_initdate, end_initdata, int_initdate, fcsthr1, fcsthr2, int_fcsthr, ncfile_pattern, features)
     
-    ncdata_interp_fcstto1hr(ncdata, fcsthrs, [0,1,2,3,4,5])
+    ncdata_interp_fcstto1hr(ncdata, init_dts, fcsthrs, [0,1,2,3,4,5])
     df=ncdata_to_DataFrame(ncdata, features, init_dts, [0,1,2,3,4,5])
-    #df.to_csv("test.csv")
-    df.to_pickle("test_2017.pkl")
+    #df.to_pickle("test_2017.pkl")
+    df.to_pickle("test_2016.pkl")
